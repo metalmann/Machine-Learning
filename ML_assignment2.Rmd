@@ -1,0 +1,73 @@
+---
+title: "Trying to classify activity performance quality"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+  word_document: default
+---
+##Synopsis
+
+This is a study of the wearable device collected data, analyzed to understand if qualitative predictions about how 'well' an excercise activity was attempted.
+
+This paper looks at the data and come up with qualitative prediction values.
+
+## Loading and preprocessing the data
+
+```{r,cache=TRUE }
+library(caret)
+setwd("C:/Coursera/ML_Assignment")
+training <- read.csv("pml-training.csv",na.strings=c("NA","NaN","#DIV/0!",""))
+testing <- read.csv("pml-testing.csv",na.strings=c("NA","NaN","#DIV/0!",""))
+training<-training[,colSums(is.na(training)) == 0]
+testing <-testing[,colSums(is.na(testing)) == 0]
+
+
+head(training)
+```
+
+## What does the data look like?
+
+I am taking all the remaining variables other than the first 8 for the the analysis as I am not sure if escewing any variable will give us a better model.
+
+```{r,cache=TRUE}
+
+training   <-training[,-c(1:7)]
+testing <-testing[,-c(1:7)]
+
+```
+
+## Divide the training data into a training set and a validation set
+
+```{r,cache=TRUE }
+Train <- createDataPartition(training$classe, p = 0.6, list = FALSE)
+subTraining <- training[Train,]
+subTesting <- training[-Train,]
+
+```
+
+## Model building
+
+I am choosing to build a Random Forest model.
+
+```{r,cache=TRUE }
+
+model1 <- train(classe ~ ., data = subTraining, method = "rf", prox = TRUE)
+
+```
+## Apply the model to the test data
+```{r,cache=TRUE }
+predTest <- predict(model1, subTesting, type = "class")
+
+predTest
+```
+
+##Let us examine the accuracy and measure the sample for the built model
+
+```{r,cache=TRUE }
+
+predTrain <- predict(model1, subTraining)
+confusionMatrix(predTrain, subTraining$classe)
+
+```
+
